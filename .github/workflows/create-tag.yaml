@@ -1,0 +1,37 @@
+name: Create Tag
+
+on:
+  push:
+    branches:
+      - "release/*"
+
+jobs:
+  create-tag:
+    runs-on: [ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get Version
+        id: get-version
+        shell: bash
+        run: |
+          git fetch --all
+          version=$(git branch --show-current | awk -F '/' '{print $2}')
+          tags="$(git tag -l | grep --color=never $version.* || true)"
+          if [[ $(echo $tags| wc -w) -ne 0 ]];then 
+            version=$(git tag -l | grep --color=never $version.* | sort -r | awk 'NR==1{print $1}' | python -c "import sys;v=sys.stdin.read().split('.');v[-1]=str(int(v[-1])+1);print('.'.join(v))")
+          else 
+            version="v$version.0"
+          fi
+          echo "$version"
+          echo "::set-output name=version::$version"
+      - name: Create tag
+        uses: actions/github-script@v3
+        with:
+          github-token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          script: |
+            github.git.createRef({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              ref: "refs/tags/${{ steps.get-version.outputs.version }}",
+              sha: context.sha
+            })
