@@ -1,7 +1,7 @@
 /*!
  * 
  *   @procesio/procesio-sdk-typescript v1.0.0
- *   https://github.com/hodgef/ts-library-boilerplate-basic
+ *   https://github.com/PROCESIO/procesio-sdk-typesscript
  *
  *   Copyright (c) PROCESIO (https://github.com/PROCESIO) and project contributors.
  *

@@ -116,7 +116,7 @@ const sdkInstance = new ProcesioSDK();
 
 ## 📖 Documentation
 
-Check out the [procesio-sdk-typescript documentation](https://some-url) site.
+Check out the [procesio-sdk-typescript documentation](https://procesio-sdk-typescript-zk32h.ondigitalocean.app/) site.
 
 ### To run demo on your own computer
 

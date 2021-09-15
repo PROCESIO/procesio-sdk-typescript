@@ -219,7 +219,7 @@ var ProcesioSDK = /** @class */ (function () {
      *   const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK", attachments: {name: file.name}})
      *
      *   if (!publishReq.isError && publishReq.content.flows.isValid) {
-     *     const fileVariable = publishReq.content.flows.variables.find((variable) => variable.name === "invoiceListFile");
+     *     const fileVariable = publishReq.content.flows.variables.find((variable) => variable.name === "attachments");
      *
      *     await sdkInstance.uploadFile(publishReq.content.flows.id, fileVariable.name, fileVariable.defaultValue.id, file)
      *
@@ -331,7 +331,7 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * await sdkInstance.authorize('username', 'password');
      *
-     * const runReq = await sdkInstance.run('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
+     * const runReq = await sdkInstance.runProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
      * console.log(runReq.content?.instanceId?.id); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *
