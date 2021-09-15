@@ -1,6 +1,2 @@
-import "./index.css";
-declare class MyLibrary {
-    constructor();
-    myMethod: () => boolean;
-}
-export default MyLibrary;
+import { ProcesioSDK } from "./ProcesioSDK";
+export default ProcesioSDK;
