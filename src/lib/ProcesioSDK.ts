@@ -392,14 +392,18 @@ export class ProcesioSDK {
 
             const defaultValue = instance.variables.find(
               (variable) => variable.name === variableName
-            ).defaultValue;
+            )?.defaultValue;
 
-            if (Array.isArray(fileWrapper)) {
-              fileWrapper.forEach((wrapper, index) => {
-                wrapper.fileId = (defaultValue as FileDefaultValue[])[index].id;
-              });
-            } else {
-              fileWrapper.fileId = (defaultValue as FileDefaultValue).id;
+            if (defaultValue) {
+              if (Array.isArray(fileWrapper)) {
+                fileWrapper.forEach((wrapper, index) => {
+                  wrapper.fileId = (defaultValue as FileDefaultValue[])[
+                    index
+                  ].id;
+                });
+              } else {
+                fileWrapper.fileId = (defaultValue as FileDefaultValue).id;
+              }
             }
           }
         }
