@@ -1,5 +1,5 @@
 import ProcesioSDK from "../lib";
-import { FileDefaultValue, ProcessInstance } from "../lib/types";
+import { FileDefaultValue } from "../lib/types";
 
 const sdkInstance = new ProcesioSDK();
 
