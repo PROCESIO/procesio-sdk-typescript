@@ -27,7 +27,7 @@ jobs:
       - name: Create tag
         uses: actions/github-script@v3
         with:
-          github-token: ${{ secrets.PERSONAL_GITHUB_TOKEN }}
+          github-token: ${{ secrets.PROCESIO_BOT_TOKEN }}
           script: |
             github.git.createRef({
               owner: context.repo.owner,
