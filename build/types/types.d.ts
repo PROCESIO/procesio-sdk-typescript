@@ -1,26 +1,21 @@
-export interface AuthResponse {
-    access_token: string;
-    error: unknown;
-    error_description: unknown;
-    expires_in: number;
-    refresh_expires_in: number;
-    refresh_token: string;
-    scope: string;
-    session_state: string;
-    token_type: string;
+export interface ConstructorOptions {
+    serverName?: string;
+    authenticationPort?: number;
+    mainPort?: number;
 }
-export interface FlowInstance {
+export interface ProcesioToken {
+    access_token: string;
+    expires_in: number;
+    refresh_token: string;
+}
+export interface ProcessInstance {
     id: GUID;
     title: string;
     description: string;
     isValid: boolean;
     firstName: string;
     lastName: string;
-    lastUpdate: Date;
-    startOn: Date;
-    status: number;
     workspaceName: string;
-    actions: Array<unknown>;
     variables: Array<Variable>;
 }
 export interface Variable {

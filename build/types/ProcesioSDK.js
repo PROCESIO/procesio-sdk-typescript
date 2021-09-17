@@ -36,11 +36,26 @@ var __generator = (this && this.__generator) || function (thisArg, body) {
 };
 import { request, RequestMethods } from "./utils/request";
 var ProcesioSDK = /** @class */ (function () {
-    function ProcesioSDK() {
+    /**
+     *
+     */
+    function ProcesioSDK(options) {
+        this.baseUrl = "https://api.procesio.app";
+        this.portAuth = 4532;
+        this.portEndpoints = 4321;
+        if (options === null || options === void 0 ? void 0 : options.serverName) {
+            this.baseUrl = options.serverName;
+        }
+        if (options === null || options === void 0 ? void 0 : options.authenticationPort) {
+            this.portAuth = options.authenticationPort;
+        }
+        if (options === null || options === void 0 ? void 0 : options.mainPort) {
+            this.portEndpoints = options.mainPort;
+        }
     }
     /**
      * @description
-     * Authenticates the library with the provided credentials provided in the constructor
+     * Authenticates the library and returns a token
      *
      * @remarks
      * You should await for the response of this method before proceeding with other
@@ -54,15 +69,21 @@ var ProcesioSDK = /** @class */ (function () {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * const token = await sdkInstance.authorize('username', 'password');
+     * const token = await sdkInstance.authenticate('username', 'password');
      *
      * console.log(JSON.stringify(token)); // {"access_token":"<hashed_token>", "expires_in":2592000, "refresh_expires_in":2592000, "refresh_token":"<hashed_token>", "token_type":"bearer", "session_state":"5beb683c-3ed7-4f7a-be79-c2d3eb5f4e43", "scope":"email profile", "error":null, "error_description":null}
      *
      * ```
+     * @param username - The username associated with the account.
+     *
+     * @param password - The password associated with the account.
+     *
      * @returns A Promise which returns an object containing all the necessary informations for
      * authentication, like token or refresh token.
      */
-    ProcesioSDK.prototype.authorize = function (username, password) {
+    ProcesioSDK.prototype.authenticate = function (username, password, authenticationRealm, authenticationClientId) {
+        if (authenticationRealm === void 0) { authenticationRealm = "procesio01"; }
+        if (authenticationClientId === void 0) { authenticationClientId = "procesio-ui"; }
         return __awaiter(this, void 0, void 0, function () {
             var credentials, form, property, encodedKey, encodedValue, formJoin, headers, resp, authResponse;
             return __generator(this, function (_a) {
@@ -71,8 +92,8 @@ var ProcesioSDK = /** @class */ (function () {
                         credentials = {
                             username: username,
                             password: password,
-                            realm: "procesio01",
-                            client_id: "procesio-ui",
+                            realm: authenticationRealm,
+                            client_id: authenticationClientId,
                         };
                         form = [];
                         for (property in credentials) {
@@ -83,7 +104,7 @@ var ProcesioSDK = /** @class */ (function () {
                         formJoin = form.join("&");
                         headers = new Headers();
                         headers.set("Content-type", "application/x-www-form-urlencoded");
-                        return [4 /*yield*/, fetch("https://api.procesio.app:4532/api/authentication", {
+                        return [4 /*yield*/, fetch(this.baseUrl + ":" + this.portAuth + "/api/authentication", {
                                 method: "POST",
                                 body: formJoin,
                                 headers: headers,
@@ -99,6 +120,7 @@ var ProcesioSDK = /** @class */ (function () {
             });
         });
     };
+    // TODO: refreshToken => bool
     /**
      * @description
      * Calls an endpoint through which you can publish a process with the required
@@ -106,8 +128,9 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @remarks
      * Running a process from the PROCESIO platform is done in 3 different steps.
-     * `PUBLISH` (generates an instance of a process), `uploadFile` (required ony for instances
-     * that have file inputs) and `launch` (executes the previously generated instance)
+     * `publishProcess` (generates an instance of a process),
+     * `uploadFile` (required ony for instances that have file inputs) and
+     * `launchProcessInstance` (executes the previously generated instance)
      *
      * @usageNotes
      *
@@ -116,16 +139,16 @@ var ProcesioSDK = /** @class */ (function () {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
-     * const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
+     * const publishReq = await sdkInstance.publishProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
      * console.log(publishReq.content.flows.id); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *
      * ```
      * @param processId - The id of the process. Can be obtained from the PROCESIO platform.
      *
-     * @param payload
+     * @param inputValues
      * Object which contains all the inputs needed to run a process from the PROCESIO platform.
      * The key of map is the variable name set in the process from the PROCESIO platform.
      * The value of the map is the value of said variable. If a variable is of type file, it's
@@ -135,15 +158,16 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @returns A Promise which returns the instance of the process.
      */
-    ProcesioSDK.prototype.publish = function (processId, payload, workspace) {
+    ProcesioSDK.prototype.publishProcess = function (processId, inputValues, workspace) {
         if (!this.token) {
             throw Error("Authorization information missing.");
         }
         return request({
+            base: this.baseUrl,
             url: "Projects/" + processId + "/instances/publish",
             bearerToken: this.token,
             workspace: workspace,
-            body: payload,
+            body: inputValues,
             method: RequestMethods.POST,
         });
     };
@@ -153,8 +177,9 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @remarks
      * Running a process from the PROCESIO platform is done in 3 different steps.
-     * `publish` (generates an instance of a process), `uploadFile` (required ony for instances
-     * that have file inputs) and `LAUNCH` (executes the previously generated instance)
+     * `publishProcess` (generates an instance of a process),
+     * `uploadFile` (required ony for instances that have file inputs) and
+     * `launchProcessInstance` (executes the previously generated instance)
      *
      * @usageNotes
      *
@@ -163,12 +188,12 @@ var ProcesioSDK = /** @class */ (function () {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
-     * const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
+     * const publishReq = await sdkInstance.publishProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
      * if (!publishReq.isError && publishReq.content.flows.isValid) {
-     *   const launchReq = await sdkInstance.launch(publish.content.flows.id);
+     *   const launchReq = await sdkInstance.launchProcessInstance(publish.content.flows.id);
      *
      *   console.log(launchReq.content?.instanceId); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *}
@@ -177,14 +202,20 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @param workspace - The workspace associated with the instance. Optional.
      *
+     * @param isSynchronous - If true Promise will return result only after the process
+     * finishes executing, otherwise after the process starts executing.
+     *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    ProcesioSDK.prototype.launch = function (instanceId, workspace) {
+    ProcesioSDK.prototype.launchProcessInstance = function (instanceId, isSynchronous, workspace) {
+        if (isSynchronous === void 0) { isSynchronous = false; }
         if (!this.token) {
             throw Error("Authorization information missing.");
         }
+        var syncQuery = isSynchronous ? "?runSynchronous=true" : "";
         return request({
-            url: "Projects/instances/" + instanceId + "/launch",
+            base: this.baseUrl,
+            url: "Projects/instances/" + instanceId + "/launch" + syncQuery,
             bearerToken: this.token,
             workspace: workspace,
             body: { connectionId: "" },
@@ -196,8 +227,9 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @remarks
      * Running a process from the PROCESIO platform is done in 3 different steps.
-     * `publish` (generates an instance of a process), `UPLOADFILE` (required ony for instances
-     * that have file inputs) and `launch` (executes the previously generated instance)
+     * `publishProcess` (generates an instance of a process),
+     * `uploadFile` (required ony for instances that have file inputs) and
+     * `launchProcessInstance` (executes the previously generated instance)
      *
      * @usageNotes
      *
@@ -206,7 +238,7 @@ var ProcesioSDK = /** @class */ (function () {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
      * document
      *   .getElementById("file")
@@ -216,14 +248,14 @@ var ProcesioSDK = /** @class */ (function () {
      *   const files = evt.target.files; // FileList object
      *   const file = files[0];
      *
-     *   const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK", attachments: {name: file.name}})
+     *   const publishReq = await sdkInstance.publishProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK", attachments: {name: file.name}})
      *
      *   if (!publishReq.isError && publishReq.content.flows.isValid) {
      *     const fileVariable = publishReq.content.flows.variables.find((variable) => variable.name === "attachments");
      *
      *     await sdkInstance.uploadFile(publishReq.content.flows.id, fileVariable.name, fileVariable.defaultValue.id, file)
      *
-     *     const launchReq = await sdkInstance.launch(publishReq.content.flows.id);
+     *     const launchReq = await sdkInstance.launchProcessInstance(publishReq.content.flows.id);
      *
      *     console.log(launchReq.content?.instanceId); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *   }
@@ -262,7 +294,7 @@ var ProcesioSDK = /** @class */ (function () {
                         formData.append("package", file);
                         headers.delete("Content-Type");
                         delete headers["Content-Type"];
-                        return [4 /*yield*/, fetch("https://api.procesio.app:4321/api/file/upload/flow", {
+                        return [4 /*yield*/, fetch(this.baseUrl + ":" + this.portEndpoints + "/api/file/upload/flow", {
                                 method: "POST",
                                 headers: headers,
                                 body: formData,
@@ -279,8 +311,7 @@ var ProcesioSDK = /** @class */ (function () {
      * Calls an endpoint through which you can run a process with the required inputs.
      *
      * @remarks
-     * The called endpoint only work for processes than don't have file inputs.
-     * The called endpoint uses the endpoints called in `publish` and `launch`.
+     * This method only works for processes than don't have file inputs.
      *
      * @usageNotes
      *
@@ -289,7 +320,7 @@ var ProcesioSDK = /** @class */ (function () {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
      * const runReq = await sdkInstance.run('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
@@ -298,7 +329,7 @@ var ProcesioSDK = /** @class */ (function () {
      * ```
      * @param processId - The id of the process. Can be obtained from the PROCESIO platform.
      *
-     * @param payload
+     * @param inputValues
      * Object which contains all the inputs needed to run a process from the PROCESIO platform.
      * The key of map is the variable name set in the process from the PROCESIO platform.
      * The value of the map is the value of said input variable.
@@ -307,15 +338,18 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    ProcesioSDK.prototype.run = function (processId, payload, workspace) {
+    ProcesioSDK.prototype.run = function (processId, inputValues, isSynchronous, workspace) {
+        if (isSynchronous === void 0) { isSynchronous = false; }
         if (!this.token) {
             throw Error("Authorization information missing.");
         }
+        var syncQuery = isSynchronous ? "?runSynchronous=true" : "";
         return request({
-            url: "Projects/" + processId + "/run",
+            base: this.baseUrl,
+            url: "Projects/" + processId + "/run" + syncQuery,
             bearerToken: this.token,
             workspace: workspace,
-            body: { payload: payload },
+            body: { payload: inputValues },
         });
     };
     /**
@@ -329,7 +363,7 @@ var ProcesioSDK = /** @class */ (function () {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
      * const runReq = await sdkInstance.runProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
@@ -338,7 +372,7 @@ var ProcesioSDK = /** @class */ (function () {
      * ```
      * @param processId - The id of the process. Can be obtained from the PROCESIO platform.
      *
-     * @param payload
+     * @param inputValues
      * Object which contains all the inputs needed to run a process from the PROCESIO platform.
      * The key of map is the variable name set in the process from the PROCESIO platform.
      * The value of the map is the value of said input variable.
@@ -347,16 +381,18 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    ProcesioSDK.prototype.runProcess = function (processId, payload, workspace) {
+    ProcesioSDK.prototype.runProcess = function (processId, inputValues, isSynchronous, workspace) {
+        var _a;
+        if (isSynchronous === void 0) { isSynchronous = false; }
         return __awaiter(this, void 0, void 0, function () {
-            var hasFiles, files, parsedPayload, publishReq, instance_1, _loop_1, variableName, promises, _a, _b, _i, variableName, element, index, _c, _d, _e, _f;
+            var hasFiles, files, parsedPayload, publishReq, instance_1, _loop_1, variableName, promises, _b, _c, _i, variableName, element, index, _d, _e, _f, _g;
             var _this = this;
-            return __generator(this, function (_g) {
-                switch (_g.label) {
+            return __generator(this, function (_h) {
+                switch (_h.label) {
                     case 0:
                         hasFiles = false;
                         files = {};
-                        parsedPayload = Object.entries(payload).reduce(function (acc, _a) {
+                        parsedPayload = Object.entries(inputValues).reduce(function (acc, _a) {
                             var key = _a[0], value = _a[1];
                             if (value instanceof File) {
                                 hasFiles = true;
@@ -375,22 +411,24 @@ var ProcesioSDK = /** @class */ (function () {
                             return acc;
                         }, {});
                         if (!hasFiles) return [3 /*break*/, 12];
-                        return [4 /*yield*/, this.publish(processId, parsedPayload, workspace)];
+                        return [4 /*yield*/, this.publishProcess(processId, parsedPayload, workspace)];
                     case 1:
-                        publishReq = _g.sent();
+                        publishReq = _h.sent();
                         if (!(!publishReq.isError && publishReq.content.flows.isValid)) return [3 /*break*/, 11];
                         instance_1 = publishReq.content.flows;
                         _loop_1 = function (variableName) {
                             if (Object.prototype.hasOwnProperty.call(files, variableName)) {
                                 var fileWrapper = files[variableName];
-                                var defaultValue_1 = instance_1.variables.find(function (variable) { return variable.name === variableName; }).defaultValue;
-                                if (Array.isArray(fileWrapper)) {
-                                    fileWrapper.forEach(function (wrapper, index) {
-                                        wrapper.fileId = defaultValue_1[index].id;
-                                    });
-                                }
-                                else {
-                                    fileWrapper.fileId = defaultValue_1.id;
+                                var defaultValue_1 = (_a = instance_1.variables.find(function (variable) { return variable.name === variableName; })) === null || _a === void 0 ? void 0 : _a.defaultValue;
+                                if (defaultValue_1) {
+                                    if (Array.isArray(fileWrapper)) {
+                                        fileWrapper.forEach(function (wrapper, index) {
+                                            wrapper.fileId = defaultValue_1[index].id;
+                                        });
+                                    }
+                                    else {
+                                        fileWrapper.fileId = defaultValue_1.id;
+                                    }
                                 }
                             }
                         };
@@ -398,47 +436,59 @@ var ProcesioSDK = /** @class */ (function () {
                             _loop_1(variableName);
                         }
                         promises = [];
-                        _a = [];
-                        for (_b in files)
-                            _a.push(_b);
+                        _b = [];
+                        for (_c in files)
+                            _b.push(_c);
                         _i = 0;
-                        _g.label = 2;
+                        _h.label = 2;
                     case 2:
-                        if (!(_i < _a.length)) return [3 /*break*/, 10];
-                        variableName = _a[_i];
+                        if (!(_i < _b.length)) return [3 /*break*/, 10];
+                        variableName = _b[_i];
                         if (!Object.prototype.hasOwnProperty.call(files, variableName)) return [3 /*break*/, 9];
                         element = files[variableName];
                         if (!Array.isArray(element)) return [3 /*break*/, 7];
                         index = 0;
-                        _g.label = 3;
+                        _h.label = 3;
                     case 3:
                         if (!(index < element.length)) return [3 /*break*/, 6];
-                        _d = (_c = promises).push;
+                        _e = (_d = promises).push;
                         return [4 /*yield*/, this.uploadFile(instance_1.id, variableName, element[index].fileId, element[index].package)];
                     case 4:
-                        _d.apply(_c, [_g.sent()]);
-                        _g.label = 5;
+                        _e.apply(_d, [_h.sent()]);
+                        _h.label = 5;
                     case 5:
                         index++;
                         return [3 /*break*/, 3];
                     case 6: return [3 /*break*/, 9];
                     case 7:
-                        _f = (_e = promises).push;
+                        _g = (_f = promises).push;
                         return [4 /*yield*/, this.uploadFile(instance_1.id, variableName, element.fileId, element.package)];
                     case 8:
-                        _f.apply(_e, [_g.sent()]);
-                        _g.label = 9;
+                        _g.apply(_f, [_h.sent()]);
+                        _h.label = 9;
                     case 9:
                         _i++;
                         return [3 /*break*/, 2];
                     case 10: return [2 /*return*/, Promise.all(promises).then(function () {
-                            return _this.launch(instance_1.id, workspace);
+                            return _this.launchProcessInstance(instance_1.id, isSynchronous, workspace);
                         })];
                     case 11: return [3 /*break*/, 13];
-                    case 12: return [2 /*return*/, this.run(processId, payload, workspace)];
+                    case 12: return [2 /*return*/, this.run(processId, inputValues, isSynchronous, workspace)];
                     case 13: return [2 /*return*/];
                 }
             });
+        });
+    };
+    ProcesioSDK.prototype.getStatus = function (instanceId, workspace) {
+        if (!this.token) {
+            throw Error("Authorization information missing.");
+        }
+        return request({
+            base: this.baseUrl,
+            url: "projects/instances/" + instanceId + "/status",
+            bearerToken: this.token,
+            workspace: workspace,
+            method: RequestMethods.GET,
         });
     };
     return ProcesioSDK;

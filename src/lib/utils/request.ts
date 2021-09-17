@@ -1,4 +1,5 @@
 export interface RequestParams {
+  base: string;
   url: string;
   bearerToken: string;
   workspace: string;
@@ -9,11 +10,11 @@ export interface RequestParams {
 export interface RestResponse<T> {
   status: number;
   isError: boolean;
-  errorContent?: ErrorContent[];
+  errorContent?: ErrorResponse[];
   content?: T;
 }
 
-export interface ErrorContent {
+export interface ErrorResponse {
   statusCode: number;
   target: string;
   value: string;
@@ -27,6 +28,7 @@ export enum RequestMethods {
 }
 
 export async function request<T>({
+  base,
   bearerToken,
   url,
   method = RequestMethods.POST,
@@ -43,7 +45,7 @@ export async function request<T>({
 
   headers.set("workspace", workspace);
 
-  const req = await fetch(`https://api.procesio.app:4321/api/${url}`, {
+  const req = await fetch(`${base}:4321/api/${url}`, {
     method,
     headers,
     body: JSON.stringify(body),

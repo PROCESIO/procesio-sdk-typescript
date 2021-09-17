@@ -1,5 +1,5 @@
 import ProcesioSDK from "../lib";
-import { FileDefaultValue } from "../lib/types";
+import { FileDefaultValue, ProcessInstance } from "../lib/types";
 
 const sdkInstance = new ProcesioSDK();
 
@@ -34,9 +34,9 @@ input.onchange = function (e) {
 };
 
 btnPublishLaunch.onclick = async function () {
-  await sdkInstance.authorize("cuore.nica@procesio.com", "C#ut1creier");
+  await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
 
-  const publishReq = await sdkInstance.publish(
+  const publishReq = await sdkInstance.publishProcess(
     "b3b17c47-e11f-4a94-8456-1856ca07dec1",
     {
       from: "External application",
@@ -59,13 +59,19 @@ btnPublishLaunch.onclick = async function () {
       singleFile
     );
 
-    const launch = await sdkInstance.launch(publishReq.content.flows.id);
-    console.log(launch.content.instanceId);
+    const launch = await sdkInstance.launchProcessInstance(
+      publishReq.content.flows.id
+    );
+
+    if ("instanceId" in launch.content) {
+      console.log(await sdkInstance.getStatus(launch.content.instanceId));
+      console.log(launch.content.instanceId);
+    }
   }
 };
 
 btnRunProcess.onclick = async function () {
-  await sdkInstance.authorize("cuore.nica@procesio.com", "C#ut1creier");
+  await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
 
   sdkInstance
     .runProcess("241c2beb-4788-4c07-a705-0cec62ac1086", {
