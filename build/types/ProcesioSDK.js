@@ -336,6 +336,9 @@ var ProcesioSDK = /** @class */ (function () {
      *
      * @param workspace - The workspace associated with the process. Optional.
      *
+     * @param isSynchronous - If true Promise will return result only after the process
+     * finishes executing, otherwise after the process starts executing.
+     *
      * @returns A Promise which returns an object with they key instanceId.
      */
     ProcesioSDK.prototype.run = function (processId, inputValues, isSynchronous, workspace) {
@@ -452,7 +455,7 @@ var ProcesioSDK = /** @class */ (function () {
                     case 3:
                         if (!(index < element.length)) return [3 /*break*/, 6];
                         _e = (_d = promises).push;
-                        return [4 /*yield*/, this.uploadFile(instance_1.id, variableName, element[index].fileId, element[index].package)];
+                        return [4 /*yield*/, this.uploadFile(instance_1.id, variableName, element[index].fileId, element[index].package, workspace)];
                     case 4:
                         _e.apply(_d, [_h.sent()]);
                         _h.label = 5;
@@ -462,7 +465,7 @@ var ProcesioSDK = /** @class */ (function () {
                     case 6: return [3 /*break*/, 9];
                     case 7:
                         _g = (_f = promises).push;
-                        return [4 /*yield*/, this.uploadFile(instance_1.id, variableName, element.fileId, element.package)];
+                        return [4 /*yield*/, this.uploadFile(instance_1.id, variableName, element.fileId, element.package, workspace)];
                     case 8:
                         _g.apply(_f, [_h.sent()]);
                         _h.label = 9;

@@ -111,7 +111,7 @@ export declare class ProcesioSDK {
      *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    launchProcessInstance(instanceId: GUID, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<{
+    launchProcessInstance(instanceId: GUID, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<ProcessInstance | {
         instanceId: GUID;
     }>>;
     /**
@@ -196,9 +196,12 @@ export declare class ProcesioSDK {
      *
      * @param workspace - The workspace associated with the process. Optional.
      *
+     * @param isSynchronous - If true Promise will return result only after the process
+     * finishes executing, otherwise after the process starts executing.
+     *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    run(processId: GUID, inputValues: Record<string, unknown>, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<{
+    run(processId: GUID, inputValues: Record<string, unknown>, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<ProcessInstance | {
         instanceId: GUID;
     }>>;
     /**
@@ -230,7 +233,7 @@ export declare class ProcesioSDK {
      *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    runProcess(processId: GUID, inputValues: Record<string, unknown | File | FileList>, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<{
+    runProcess(processId: GUID, inputValues: Record<string, unknown | File | FileList>, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<ProcessInstance | {
         instanceId: string;
     }>>;
     getStatus(instanceId: GUID, workspace?: string): Promise<import("./utils/request").RestResponse<Record<"instance", ProcessInstance>>>;

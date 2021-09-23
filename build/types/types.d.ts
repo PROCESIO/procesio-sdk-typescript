@@ -17,6 +17,7 @@ export interface ProcessInstance {
     lastName: string;
     workspaceName: string;
     variables: Array<Variable>;
+    status: number;
 }
 export interface Variable {
     id: GUID;

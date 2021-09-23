@@ -481,7 +481,8 @@ export class ProcesioSDK {
                     instance.id,
                     variableName,
                     element[index].fileId,
-                    element[index].package
+                    element[index].package,
+                    workspace
                   )
                 );
               }
@@ -491,7 +492,8 @@ export class ProcesioSDK {
                   instance.id,
                   variableName,
                   element.fileId,
-                  element.package
+                  element.package,
+                  workspace
                 )
               );
             }
