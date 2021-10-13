@@ -2,6 +2,12 @@ export interface ConstructorOptions {
   serverName?: string;
   authenticationPort?: number;
   mainPort?: number;
+  apiKey?: ApiKeyCredential;
+}
+
+export interface ApiKeyCredential {
+  name: string;
+  value: string;
 }
 
 export interface ProcesioToken {

@@ -1,10 +1,13 @@
+import { ApiKeyCredential } from "../types";
+
 export interface RequestParams {
   base: string;
   url: string;
-  bearerToken: string;
   workspace: string;
+  bearerToken?: string;
   body?: unknown;
   method?: RequestMethods;
+  apiKey?: ApiKeyCredential;
 }
 
 export interface RestResponse<T> {
@@ -30,6 +33,7 @@ export enum RequestMethods {
 export async function request<T>({
   base,
   bearerToken,
+  apiKey,
   url,
   method = RequestMethods.POST,
   workspace = "",
@@ -39,7 +43,14 @@ export async function request<T>({
 
   headers.set("Content-type", "application/json");
 
-  headers.set("Authorization", `Bearer ${bearerToken}`);
+  if (bearerToken) {
+    headers.set("Authorization", `Bearer ${bearerToken}`);
+  }
+
+  if (apiKey?.name && apiKey?.value) {
+    headers.set("key", apiKey.name);
+    headers.set("value", apiKey.value);
+  }
 
   headers.set("realm", "procesio01");
 

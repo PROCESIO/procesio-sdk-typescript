@@ -1,7 +1,12 @@
 import ProcesioSDK from "../lib";
 import { FileDefaultValue } from "../lib/types";
 
-const sdkInstance = new ProcesioSDK();
+const sdkInstance = new ProcesioSDK({
+  apiKey: {
+    name: "Ut157Fx6bISXUD2h",
+    value: "vxu8rXyrmBET86K3E7TjIvaMqSXwT48YB6UxzJC64JSGbN7f8ZsWUSJaxSRJ9cIs",
+  },
+});
 
 console.log("myLibraryInstance", sdkInstance);
 
@@ -34,7 +39,7 @@ input.onchange = function (e) {
 };
 
 btnPublishLaunch.onclick = async function () {
-  await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
+  // await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
 
   const publishReq = await sdkInstance.publishProcess(
     "b3b17c47-e11f-4a94-8456-1856ca07dec1",
@@ -71,7 +76,7 @@ btnPublishLaunch.onclick = async function () {
 };
 
 btnRunProcess.onclick = async function () {
-  await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
+  // await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
 
   sdkInstance
     .runProcess("241c2beb-4788-4c07-a705-0cec62ac1086", {

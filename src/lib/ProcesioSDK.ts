@@ -6,6 +6,7 @@ import {
   FileWrapper,
   ProcessInstance,
   GUID,
+  ApiKeyCredential,
 } from "./types";
 import { request, RequestMethods } from "./utils/request";
 
@@ -17,6 +18,8 @@ export class ProcesioSDK {
   private portAuth = 4532;
 
   private portEndpoints = 4321;
+
+  private apiKey?: ApiKeyCredential;
 
   /**
    *
@@ -32,6 +35,10 @@ export class ProcesioSDK {
 
     if (options?.mainPort) {
       this.portEndpoints = options.mainPort;
+    }
+
+    if (options?.apiKey) {
+      this.apiKey = options.apiKey;
     }
   }
 
@@ -150,7 +157,7 @@ export class ProcesioSDK {
     inputValues: Record<string, unknown | FileName | FileName[]>,
     workspace?: string
   ) {
-    if (!this.token) {
+    if (!this.token && !this.apiKey) {
       throw Error("Authorization information missing.");
     }
 
@@ -158,6 +165,7 @@ export class ProcesioSDK {
       base: this.baseUrl,
       url: `Projects/${processId}/instances/publish`,
       bearerToken: this.token,
+      apiKey: this.apiKey,
       workspace,
       body: inputValues,
       method: RequestMethods.POST,
@@ -205,7 +213,7 @@ export class ProcesioSDK {
     isSynchronous = false,
     workspace?: string
   ) {
-    if (!this.token) {
+    if (!this.token && !this.apiKey) {
       throw Error("Authorization information missing.");
     }
 
@@ -215,6 +223,7 @@ export class ProcesioSDK {
       base: this.baseUrl,
       url: `Projects/instances/${instanceId}/launch${syncQuery}`,
       bearerToken: this.token,
+      apiKey: this.apiKey,
       workspace,
       body: { connectionId: "" },
     });
@@ -278,7 +287,7 @@ export class ProcesioSDK {
     file: File,
     workspace = ""
   ) {
-    if (!this.token) {
+    if (!this.token && !this.apiKey) {
       throw Error("Authorization information missing.");
     }
 
@@ -286,7 +295,14 @@ export class ProcesioSDK {
 
     headers.set("Accept", "application/json");
 
-    headers.set("Authorization", `Bearer ${this.token}`);
+    if (this.token) {
+      headers.set("Authorization", `Bearer ${this.token}`);
+    }
+
+    if (this.apiKey?.name && this.apiKey?.value) {
+      headers.set("key", this.apiKey.name);
+      headers.set("value", this.apiKey.value);
+    }
 
     headers.set("realm", "procesio01");
 
@@ -358,7 +374,7 @@ export class ProcesioSDK {
     isSynchronous = false,
     workspace?: string
   ) {
-    if (!this.token) {
+    if (!this.token && !this.apiKey) {
       throw Error("Authorization information missing.");
     }
 
@@ -368,6 +384,7 @@ export class ProcesioSDK {
       base: this.baseUrl,
       url: `Projects/${processId}/run${syncQuery}`,
       bearerToken: this.token,
+      apiKey: this.apiKey,
       workspace,
       body: { payload: inputValues },
     });
@@ -514,7 +531,7 @@ export class ProcesioSDK {
   }
 
   getStatus(instanceId: GUID, workspace?: string) {
-    if (!this.token) {
+    if (!this.token && !this.apiKey) {
       throw Error("Authorization information missing.");
     }
 
@@ -522,6 +539,7 @@ export class ProcesioSDK {
       base: this.baseUrl,
       url: `projects/instances/${instanceId}/status`,
       bearerToken: this.token,
+      apiKey: this.apiKey,
       workspace,
       method: RequestMethods.GET,
     });
