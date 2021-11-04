@@ -26,7 +26,7 @@ const sdkInstance = new ProcesioSDK();
 ### self-host/cdn
 
 ```
-<script src="build/index.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/PROCESIO/procesio-sdk-typescript@main/build/index.js"></script>
 
 const ProcesioSDK = window.ProcesioSDK.default;
 const sdkInstance = new ProcesioSDK();
@@ -116,7 +116,7 @@ const sdkInstance = new ProcesioSDK();
 
 ## 📖 Documentation
 
-Check out the [procesio-sdk-typescript documentation](https://some-url) site.
+Check out the [procesio-sdk-typescript documentation](https://procesio-sdk-typescript-zk32h.ondigitalocean.app/) site.
 
 ### To run demo on your own computer
 

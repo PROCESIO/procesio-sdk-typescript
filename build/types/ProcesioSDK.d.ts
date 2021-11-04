@@ -1,9 +1,16 @@
-import { AuthResponse, FileName, FlowInstance, GUID } from "./types";
+import { ProcesioToken, ConstructorOptions, FileName, ProcessInstance, GUID } from "./types";
 export declare class ProcesioSDK {
-    private token?;
+    token?: string;
+    private baseUrl;
+    private portAuth;
+    private portEndpoints;
+    /**
+     *
+     */
+    constructor(options?: ConstructorOptions);
     /**
      * @description
-     * Authenticates the library with the provided credentials provided in the constructor
+     * Authenticates the library and returns a token
      *
      * @remarks
      * You should await for the response of this method before proceeding with other
@@ -17,15 +24,19 @@ export declare class ProcesioSDK {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * const token = await sdkInstance.authorize('username', 'password');
+     * const token = await sdkInstance.authenticate('username', 'password');
      *
      * console.log(JSON.stringify(token)); // {"access_token":"<hashed_token>", "expires_in":2592000, "refresh_expires_in":2592000, "refresh_token":"<hashed_token>", "token_type":"bearer", "session_state":"5beb683c-3ed7-4f7a-be79-c2d3eb5f4e43", "scope":"email profile", "error":null, "error_description":null}
      *
      * ```
+     * @param username - The username associated with the account.
+     *
+     * @param password - The password associated with the account.
+     *
      * @returns A Promise which returns an object containing all the necessary informations for
      * authentication, like token or refresh token.
      */
-    authorize(username: string, password: string): Promise<AuthResponse>;
+    authenticate(username: string, password: string, authenticationRealm?: string, authenticationClientId?: string): Promise<ProcesioToken>;
     /**
      * @description
      * Calls an endpoint through which you can publish a process with the required
@@ -33,8 +44,9 @@ export declare class ProcesioSDK {
      *
      * @remarks
      * Running a process from the PROCESIO platform is done in 3 different steps.
-     * `PUBLISH` (generates an instance of a process), `uploadFile` (required ony for instances
-     * that have file inputs) and `launch` (executes the previously generated instance)
+     * `publishProcess` (generates an instance of a process),
+     * `uploadFile` (required ony for instances that have file inputs) and
+     * `launchProcessInstance` (executes the previously generated instance)
      *
      * @usageNotes
      *
@@ -43,16 +55,16 @@ export declare class ProcesioSDK {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
-     * const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
+     * const publishReq = await sdkInstance.publishProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
      * console.log(publishReq.content.flows.id); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *
      * ```
      * @param processId - The id of the process. Can be obtained from the PROCESIO platform.
      *
-     * @param payload
+     * @param inputValues
      * Object which contains all the inputs needed to run a process from the PROCESIO platform.
      * The key of map is the variable name set in the process from the PROCESIO platform.
      * The value of the map is the value of said variable. If a variable is of type file, it's
@@ -62,15 +74,16 @@ export declare class ProcesioSDK {
      *
      * @returns A Promise which returns the instance of the process.
      */
-    publish(processId: GUID, payload: Record<string, unknown | FileName | FileName[]>, workspace?: string): Promise<import("./utils/request").RestResponse<Record<"flows", FlowInstance>>>;
+    publishProcess(processId: GUID, inputValues: Record<string, unknown | FileName | FileName[]>, workspace?: string): Promise<import("./utils/request").RestResponse<Record<"flows", ProcessInstance>>>;
     /**
      * @description
      * Calls an endpoint through which you can launch an instance of a process.
      *
      * @remarks
      * Running a process from the PROCESIO platform is done in 3 different steps.
-     * `publish` (generates an instance of a process), `uploadFile` (required ony for instances
-     * that have file inputs) and `LAUNCH` (executes the previously generated instance)
+     * `publishProcess` (generates an instance of a process),
+     * `uploadFile` (required ony for instances that have file inputs) and
+     * `launchProcessInstance` (executes the previously generated instance)
      *
      * @usageNotes
      *
@@ -79,12 +92,12 @@ export declare class ProcesioSDK {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
-     * const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
+     * const publishReq = await sdkInstance.publishProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
      * if (!publishReq.isError && publishReq.content.flows.isValid) {
-     *   const launchReq = await sdkInstance.launch(publish.content.flows.id);
+     *   const launchReq = await sdkInstance.launchProcessInstance(publish.content.flows.id);
      *
      *   console.log(launchReq.content?.instanceId); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *}
@@ -93,9 +106,12 @@ export declare class ProcesioSDK {
      *
      * @param workspace - The workspace associated with the instance. Optional.
      *
+     * @param isSynchronous - If true Promise will return result only after the process
+     * finishes executing, otherwise after the process starts executing.
+     *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    launch(instanceId: GUID, workspace?: string): Promise<import("./utils/request").RestResponse<{
+    launchProcessInstance(instanceId: GUID, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<ProcessInstance | {
         instanceId: GUID;
     }>>;
     /**
@@ -104,8 +120,9 @@ export declare class ProcesioSDK {
      *
      * @remarks
      * Running a process from the PROCESIO platform is done in 3 different steps.
-     * `publish` (generates an instance of a process), `UPLOADFILE` (required ony for instances
-     * that have file inputs) and `launch` (executes the previously generated instance)
+     * `publishProcess` (generates an instance of a process),
+     * `uploadFile` (required ony for instances that have file inputs) and
+     * `launchProcessInstance` (executes the previously generated instance)
      *
      * @usageNotes
      *
@@ -114,7 +131,7 @@ export declare class ProcesioSDK {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
      * document
      *   .getElementById("file")
@@ -124,14 +141,14 @@ export declare class ProcesioSDK {
      *   const files = evt.target.files; // FileList object
      *   const file = files[0];
      *
-     *   const publishReq = await sdkInstance.publish('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK", attachments: {name: file.name}})
+     *   const publishReq = await sdkInstance.publishProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK", attachments: {name: file.name}})
      *
      *   if (!publishReq.isError && publishReq.content.flows.isValid) {
-     *     const fileVariable = publishReq.content.flows.variables.find((variable) => variable.name === "invoiceListFile");
+     *     const fileVariable = publishReq.content.flows.variables.find((variable) => variable.name === "attachments");
      *
      *     await sdkInstance.uploadFile(publishReq.content.flows.id, fileVariable.name, fileVariable.defaultValue.id, file)
      *
-     *     const launchReq = await sdkInstance.launch(publishReq.content.flows.id);
+     *     const launchReq = await sdkInstance.launchProcessInstance(publishReq.content.flows.id);
      *
      *     console.log(launchReq.content?.instanceId); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *   }
@@ -154,8 +171,7 @@ export declare class ProcesioSDK {
      * Calls an endpoint through which you can run a process with the required inputs.
      *
      * @remarks
-     * The called endpoint only work for processes than don't have file inputs.
-     * The called endpoint uses the endpoints called in `publish` and `launch`.
+     * This method only works for processes than don't have file inputs.
      *
      * @usageNotes
      *
@@ -164,7 +180,7 @@ export declare class ProcesioSDK {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
      * const runReq = await sdkInstance.run('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
@@ -173,16 +189,19 @@ export declare class ProcesioSDK {
      * ```
      * @param processId - The id of the process. Can be obtained from the PROCESIO platform.
      *
-     * @param payload
+     * @param inputValues
      * Object which contains all the inputs needed to run a process from the PROCESIO platform.
      * The key of map is the variable name set in the process from the PROCESIO platform.
      * The value of the map is the value of said input variable.
      *
      * @param workspace - The workspace associated with the process. Optional.
      *
+     * @param isSynchronous - If true Promise will return result only after the process
+     * finishes executing, otherwise after the process starts executing.
+     *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    run(processId: GUID, payload: Record<string, unknown>, workspace?: string): Promise<import("./utils/request").RestResponse<{
+    run(processId: GUID, inputValues: Record<string, unknown>, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<ProcessInstance | {
         instanceId: GUID;
     }>>;
     /**
@@ -196,16 +215,16 @@ export declare class ProcesioSDK {
      *  ```typescript
      * const sdkInstance = new ProcesioSDK();
      *
-     * await sdkInstance.authorize('username', 'password');
+     * await sdkInstance.authenticate('username', 'password');
      *
-     * const runReq = await sdkInstance.run('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
+     * const runReq = await sdkInstance.runProcess('xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx', {to: "someemail@domain.com", subject: "Process launched via SDK"})
      *
      * console.log(runReq.content?.instanceId?.id); // "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxx"
      *
      * ```
      * @param processId - The id of the process. Can be obtained from the PROCESIO platform.
      *
-     * @param payload
+     * @param inputValues
      * Object which contains all the inputs needed to run a process from the PROCESIO platform.
      * The key of map is the variable name set in the process from the PROCESIO platform.
      * The value of the map is the value of said input variable.
@@ -214,7 +233,8 @@ export declare class ProcesioSDK {
      *
      * @returns A Promise which returns an object with they key instanceId.
      */
-    runProcess(processId: GUID, payload: Record<string, unknown | File | FileList>, workspace?: string): Promise<import("./utils/request").RestResponse<{
+    runProcess(processId: GUID, inputValues: Record<string, unknown | File | FileList>, isSynchronous?: boolean, workspace?: string): Promise<import("./utils/request").RestResponse<ProcessInstance | {
         instanceId: string;
     }>>;
+    getStatus(instanceId: GUID, workspace?: string): Promise<import("./utils/request").RestResponse<Record<"instance", ProcessInstance>>>;
 }

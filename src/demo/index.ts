@@ -1,22 +1,32 @@
 import ProcesioSDK from "../lib";
+import { FileDefaultValue } from "../lib/types";
 
-const myLibraryInstance = new ProcesioSDK();
+const sdkInstance = new ProcesioSDK({
+  apiKey: {
+    name: "Ut157Fx6bISXUD2h",
+    value: "vxu8rXyrmBET86K3E7TjIvaMqSXwT48YB6UxzJC64JSGbN7f8ZsWUSJaxSRJ9cIs",
+  },
+});
 
-console.log("myLibraryInstance", myLibraryInstance);
+console.log("myLibraryInstance", sdkInstance);
 
 const input = document.createElement("input");
 
 input.type = "file";
 input.multiple = true;
 
-const btn = document.createElement("button");
-btn.innerText = "Trigger flow";
+const btnRunProcess = document.createElement("button");
+btnRunProcess.innerText = "RunProcess";
+
+const btnPublishLaunch = document.createElement("button");
+btnPublishLaunch.innerText = "PublishLaunchProcess";
 
 const body = document.querySelector("body");
 
-body.innerHTML = `<h1>Hello World!</h1>`;
+body.innerHTML = `<h1>ProcesioSDK</h1>`;
 body.appendChild(input);
-body.appendChild(btn);
+body.appendChild(btnPublishLaunch);
+body.appendChild(btnRunProcess);
 
 let fileList: FileList;
 let singleFile: File;
@@ -28,46 +38,52 @@ input.onchange = function (e) {
   singleFile = fileList[0];
 };
 
-btn.onclick = async function () {
-  await myLibraryInstance.authorize("cuore.nica@procesio.com", "C#ut1creier");
-  // const run = await myLibraryInstance.run(
-  //   "241c2beb-4788-4c07-a705-0cec62ac1086",
-  //   {
-  //     from: "External application",
-  //     to: "cuore.nica@procesio.com",
-  //     subject: "Email triggered by external application",
-  //     body: "Some randon body",
-  //   }
-  // );
-  // console.log(run.content);
-  //   return;
-  // const publish = await myLibraryInstance.publish(
-  //   "241c2beb-4788-4c07-a705-0cec62ac1086",
-  //   {
-  //     from: "External application",
-  //     to: "cuore.nica@procesio.com",
-  //     subject: "Email triggered by external application",
-  //     body: "Some randon body",
-  //     // singleFile: singleFile,
-  //     // fileList: fileList,
-  //   }
-  // );
+btnPublishLaunch.onclick = async function () {
+  // await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
 
-  // console.log(publish.content.flows.id);
-  // if (!publish.isError && publish.content.flows.isValid) {
-  //   const launch = await myLibraryInstance.launch(publish.content.flows.id);
-  //   console.log(launch.content.instanceId);
-  // }
-
-  // myLibraryInstance.u
-
-  myLibraryInstance
-    .executeProcess("241c2beb-4788-4c07-a705-0cec62ac1086", {
+  const publishReq = await sdkInstance.publishProcess(
+    "b3b17c47-e11f-4a94-8456-1856ca07dec1",
+    {
       from: "External application",
       to: "cuore.nica@procesio.com",
       subject: "Email triggered by external application",
       body: "Some randon body",
-      singleFile: singleFile,
+      singleFile: { name: singleFile.name },
+    }
+  );
+
+  if (!publishReq.isError && publishReq.content.flows.isValid) {
+    const fileVariable = publishReq.content.flows.variables.find(
+      (variable) => variable.name === "singleFile"
+    );
+
+    await sdkInstance.uploadFile(
+      publishReq.content.flows.id,
+      fileVariable.name,
+      (fileVariable.defaultValue as FileDefaultValue).id,
+      singleFile
+    );
+
+    const launch = await sdkInstance.launchProcessInstance(
+      publishReq.content.flows.id
+    );
+
+    if ("instanceId" in launch.content) {
+      console.log(await sdkInstance.getStatus(launch.content.instanceId));
+      console.log(launch.content.instanceId);
+    }
+  }
+};
+
+btnRunProcess.onclick = async function () {
+  // await sdkInstance.authenticate("cuore.nica@procesio.com", "C#ut1creier");
+
+  sdkInstance
+    .runProcess("241c2beb-4788-4c07-a705-0cec62ac1086", {
+      from: "External application",
+      to: "cuore.nica@procesio.com",
+      subject: "Email triggered by external application",
+      body: "Some randon body",
       fileList: fileList,
     })
     .then((resp) => console.log(resp.content));

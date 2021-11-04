@@ -1,4 +1,5 @@
 export interface RequestParams {
+    base: string;
     url: string;
     bearerToken: string;
     workspace: string;
@@ -8,10 +9,10 @@ export interface RequestParams {
 export interface RestResponse<T> {
     status: number;
     isError: boolean;
-    errorContent?: ErrorContent[];
+    errorContent?: ErrorResponse[];
     content?: T;
 }
-export interface ErrorContent {
+export interface ErrorResponse {
     statusCode: number;
     target: string;
     value: string;
@@ -22,4 +23,4 @@ export declare enum RequestMethods {
     DELETE = "DELETE",
     PUT = "PUT"
 }
-export declare function request<T>({ bearerToken, url, method, workspace, body, }: RequestParams): Promise<RestResponse<T>>;
+export declare function request<T>({ base, bearerToken, url, method, workspace, body, }: RequestParams): Promise<RestResponse<T>>;

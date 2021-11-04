@@ -6,9 +6,9 @@
   "types": "build/types/index.d.ts",
   "scripts": {
     "start": "webpack serve --config webpack.config.demo.js",
-    "build": "npx typedoc --out docs src/lib/index.ts && webpack && tsc",
+    "build": "npx typedoc --out docs src/lib/ProcesioSDK.ts && webpack && tsc",
     "build:demo": "webpack --config webpack.config.demo.js",
-    "lint": "eslint src/ --ext .js,.jsx,.ts,.tsx",
+    "lint-check": "eslint src/ --ext .js,.jsx,.ts,.tsx",
     "test": "jest --silent",
     "coverage": "npm run test -- --coverage",
     "prepare": "npm run build",

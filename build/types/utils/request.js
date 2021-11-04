@@ -42,7 +42,7 @@ export var RequestMethods;
     RequestMethods["PUT"] = "PUT";
 })(RequestMethods || (RequestMethods = {}));
 export function request(_a) {
-    var bearerToken = _a.bearerToken, url = _a.url, _b = _a.method, method = _b === void 0 ? RequestMethods.POST : _b, _c = _a.workspace, workspace = _c === void 0 ? "" : _c, body = _a.body;
+    var base = _a.base, bearerToken = _a.bearerToken, url = _a.url, _b = _a.method, method = _b === void 0 ? RequestMethods.POST : _b, _c = _a.workspace, workspace = _c === void 0 ? "" : _c, body = _a.body;
     return __awaiter(this, void 0, void 0, function () {
         var headers, req, status, resp, isBadRequest, response;
         return __generator(this, function (_d) {
@@ -53,7 +53,7 @@ export function request(_a) {
                     headers.set("Authorization", "Bearer " + bearerToken);
                     headers.set("realm", "procesio01");
                     headers.set("workspace", workspace);
-                    return [4 /*yield*/, fetch("https://api.procesio.app:4321/api/" + url, {
+                    return [4 /*yield*/, fetch(base + ":4321/api/" + url, {
                             method: method,
                             headers: headers,
                             body: JSON.stringify(body),
