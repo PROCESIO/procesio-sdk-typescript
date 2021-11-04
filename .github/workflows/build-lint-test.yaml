@@ -12,14 +12,16 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      
       - uses: actions/setup-node@v2
         with:
-          node-version: '14.x'
-          registry-url: 'https://registry.npmjs.org'
+          node-version: 14
+          registry-url: "https://npm.pkg.github.com"
+          scope: "@procesio"
 
-      - name: Setup
-        run: npm install
+      - run: npm install
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.PROCESIO_BOT_TOKEN }}
+
       - name: Build
         run: npm run build
-      - name: Lint
-        run: npm run lint-check

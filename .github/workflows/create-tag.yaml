@@ -10,13 +10,19 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v2
+
+        #https://github.com/actions/checkout/issues/206
+      - name: Fetch
+        run: |
+          git fetch --all
+          git fetch --prune --unshallow --tags
+
       - name: Get Version
         id: get-version
         shell: bash
         run: |
-          git fetch --all
           version=$(git branch --show-current | awk -F '/' '{print $2}')
-          tags="$(git tag -l | grep --color=never $version.* || true)"
+          tags="$(git tag -l | grep --color=never v$version.* || true)"
           if [[ $(echo $tags| wc -w) -ne 0 ]];then 
             version=$(git tag -l | grep --color=never $version.* | sort -r | awk 'NR==1{print $1}' | python -c "import sys;v=sys.stdin.read().split('.');v[-1]=str(int(v[-1])+1);print('.'.join(v))")
           else 
