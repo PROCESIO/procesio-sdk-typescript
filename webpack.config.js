@@ -33,7 +33,8 @@ module.exports = {
     path: path.resolve(__dirname, 'build'),
     library: "ProcesioSDK",
     libraryTarget: 'umd',
-    clean: true
+    clean: true,
+    globalObject: 'this'
   },
   optimization: {
     minimize: true,
