@@ -45,7 +45,12 @@ jobs:
       - name: Build
         run: |
           npm run build
-          tar czvf dist.tar.gz dist
+
+      - run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{secrets.PROCESIO_BOT_TOKEN}}
+
+      - run: tar czvf dist.tar.gz dist
 
       - name: Create Release
         id: create_release
